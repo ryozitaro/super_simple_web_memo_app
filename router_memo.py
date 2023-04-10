@@ -9,23 +9,15 @@ import schema_memo as schema_memo
 from db import get_db
 
 router = APIRouter()
-# router.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 templates = Jinja2Templates("templates")
-
-
-""" 
-@router.get("/memos", response_model=list[schema_memo.Memo])
-async def list_memo(db: AsyncSession = Depends(get_db)):
-    return await crud_memo.get_memos(db)
- """
 
 
 @router.get("/", response_class=HTMLResponse)
 async def list_memo(request: Request, db: AsyncSession = Depends(get_db)):
     memos_list = await crud_memo.get_memos(db)
     return templates.TemplateResponse(
-        "sample.html", {"request": request, "item": {"memos_list": memos_list}}
+        "memo.html", {"request": request, "item": {"memos_list": memos_list}}
     )
 
 
