@@ -1,6 +1,6 @@
 # 超シンプルウェブメモ
 
-
+![127 0 0 1_8080_](https://user-images.githubusercontent.com/126104168/230923434-35112619-9df1-41b7-a1ec-90449d0b5681.png)
 
 ## これは何？
 FastAPIに触れたくて生まれたもの。  
