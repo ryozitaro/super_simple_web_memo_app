@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/assets/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
+    <title>超シンプルウェブメモ</title>
+    <style>
+        body,
+        button,
+        textarea {
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 1em;
+        }
+
+        #create_memo_block {
+            margin-block: 2em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #create_memo_text {
+            width: 30vw;
+            min-width: 24em;
+            height: 2.4em;
+            margin-bottom: 0.75em;
+            font-size: 1.2em;
+            box-sizing: border-box;
+            padding-block: 0.48em;
+            padding-inline: 1em;
+            border: 1px solid #ccc;
+            border-radius: 1em;
+            resize: none;
+            overflow: hidden;
+        }
+
+        .border_memo_button {
+            padding-block: 0.25em;
+            padding-inline: 0.5em;
+            font-size: 1.2em;
+            background: none;
+            cursor: pointer;
+            border-radius: 0.75em;
+        }
+
+        .memo {
+            margin-bottom: 2.5em;
+            border-radius: 1.6em;
+            border: 0.15em solid #000;
+        }
+
+        .memo_text {
+            margin: 1em;
+            overflow-wrap: break-word;
+        }
+
+        .edit_memo_textarea {
+            width: calc(100% - 2em);
+            margin: 0.81em;
+            margin-bottom: 0;
+            overflow-wrap: break-word;
+            overflow: hidden;
+            resize: none;
+        }
+
+        .ctrl_memo {
+            display: none;
+            justify-content: center;
+        }
+
+        .memo:hover,
+        .memo:has(>.edit_memo[style*="display: flex"]) {
+            margin-bottom: 0.5em;
+        }
+
+        .memo:hover>.memo_text {
+            margin-bottom: 0;
+        }
+
+        .memo:hover>.ctrl_memo {
+            display: flex;
+        }
+
+        .copy_button,
+        .edit_button,
+        .delete_button {
+            border: 0;
+            background: none;
+            cursor: pointer;
+            width: 48px;
+            height: 48px;
+        }
+
+        .copy_button {
+            background: center no-repeat url("assets/copy.svg");
+        }
+
+        .edit_button {
+            background: center no-repeat url("assets/edit.svg");
+        }
+
+        .delete_button {
+            background: center no-repeat url("assets/delete.svg");
+        }
+
+        .edit_memo {
+            display: none;
+            justify-content: center;
+            margin: 0.32em;
+        }
+
+    </style>
+    <script>
+        async function createMemo() {
+            const createMemoTextValue = document.getElementById("create_memo_text").value;
+            if (createMemoTextValue === "") {
+                return
+            }
+            const response = await fetch("/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: createMemoTextValue })
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert("エラー");
+            };
+        }
+        async function deleteMemo(btnprt, memoId) {
+            if (confirm("消す？")) {
+                const response = await fetch("/" + memoId, {
+                    method: "DELETE",
+                });
+                if (response.ok) {
+                    document.getElementById("memo_" + memoId).remove();
+                } else {
+                    alert("エラー");
+                };
+            };
+        }
+        function copyMemo(btnprt, memoId) {
+            const memoTextElement = document.getElementById("memo_text_" + memoId);
+            const range = document.createRange();
+            range.selectNodeContents(memoTextElement);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand("copy");
+            selection.removeAllRanges();
+        }
+        function editMemo(btnprt, memoId) {
+            const memoTextElement = document.getElementById("memo_text_" + memoId);
+            const memoOrigText = memoTextElement.innerText;
+            const editMemoTextArea = document.createElement("textarea");
+            editMemoTextArea.id = "memo_textarea_" + memoId;
+            editMemoTextArea.className = "edit_memo_textarea";
+            editMemoTextArea.style.height = memoTextElement.getBoundingClientRect().height + "px";
+            editMemoTextArea.setAttribute("oninput", "this.style.height = '' ; this.style.height = this.scrollHeight + 'px'");
+            memoTextElement.replaceWith(editMemoTextArea);
+            editMemoTextArea.innerText = memoOrigText;
+            btnprt.appendChild(memoTextElement);
+
+            btnprt.style.display = "none";
+
+            const editMemoButtons = document.getElementById("edit_memo_" + memoId);
+            editMemoButtons.style.display = "flex";
+        }
+        function editMemoCancel(btnprt, memoId) {
+            const memoTextAreaElement = document.getElementById("memo_textarea_" + memoId);
+            const memoOrigTextElement = document.getElementById("memo_text_" + memoId);
+            memoTextAreaElement.replaceWith(memoOrigTextElement);
+
+            const ctrlMemo = document.getElementById("ctrl_memo_" + memoId);
+            ctrlMemo.style.display = null;
+
+            btnprt.style.display = "none";
+        }
+        async function editMemoSave(btnprt, memoId) {
+            const memoTextAreaElement = document.getElementById("memo_textarea_" + memoId);
+            const memoOrigTextElement = document.getElementById("memo_text_" + memoId);
+            const response = await fetch("/" + memoId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: memoTextAreaElement.value })
+            });
+            if (response.ok) {
+                memoOrigTextElement.innerText = memoTextAreaElement.value;
+                memoTextAreaElement.replaceWith(memoOrigTextElement);
+
+                const ctrlMemo = document.getElementById("ctrl_memo_" + memoId);
+                ctrlMemo.style.display = null;
+
+                btnprt.style.display = "none";
+            } else {
+                alert("エラー");
+            }
+
+        }
+    </script>
+</head>
+
+<body>
+    <h1 id="header">シンプルメモ</h1>
+    <hr>
+    <div id="create_memo_block">
+        <textarea id="create_memo_text" placeholder="新規メモ"
+            oninput="this.style.height = '' ; this.style.height = this.scrollHeight + 'px'"></textarea>
+        <button class="border_memo_button" type="button" onclick="createMemo()">メモを追加</button>
+    </div>
+    <div>
+        {% for memo in item.memos_list %}
+        <div class="memo" id="memo_{{ memo.id }}">
+            <div class="memo_text" id="memo_text_{{ memo.id }}">{{ memo.text }}</div>
+            <div class="ctrl_memo" id="ctrl_memo_{{ memo.id }}">
+                <button class="copy_button" type="button" onclick="copyMemo(this.parentNode, '{{ memo.id }}')"></button>
+                <button class="edit_button" type="button" onclick="editMemo(this.parentNode, '{{ memo.id }}')"></button>
+                <button class="delete_button" type="button"
+                    onclick="deleteMemo(this.parentNode, '{{ memo.id }}')"></button>
+            </div>
+            <div class="edit_memo" id="edit_memo_{{ memo.id }}">
+                <button class="border_memo_button"
+                    onclick="editMemoCancel(this.parentNode, '{{ memo.id }}')">キャンセル</button>
+                <button class="border_memo_button" onclick="editMemoSave(this.parentNode, '{{ memo.id }}')">上書き</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24">
+	<clipPath id="cl_1a">
+		<rect width="24" height="24"/>
+	</clipPath>
+	<g clip-path="url(#cl_1a)">
+		<path fill="none" stroke="black" stroke-width="2" stroke-miterlimit="10" transform="matrix(1 0 0 -1 16 8)" d="M-7 -7L7 -7L7 7L-7 7L-7 -7Z"/>
+		<path fill="none" stroke="black" stroke-width="2" stroke-miterlimit="10" transform="matrix(1 0 0 -1 8 16)" d="M-2 7L-7 7L-7 -7L7 -7L7 -2"/>
+	</g>
+</svg>
